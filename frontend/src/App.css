@@ -1,0 +1,132 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(to right, #4e73df, #1cc88a);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 15px;
+}
+
+/* Responsive container */
+.container {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* Card and chat box */
+.card,
+.chat-box {
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+h1,
+h2 {
+  margin-top: 0;
+  text-align: center;
+}
+
+/* Inputs */
+select,
+input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+/* Button */
+button {
+  padding: 12px;
+  width: 100%;
+  background: #4e73df;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.2s ease;
+}
+
+button:hover {
+  background: #2e59d9;
+}
+
+/* Chat messages */
+.messages {
+  height: 50vh;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 15px;
+  padding: 10px;
+  background: #f5f5f5;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Chat bubbles */
+.msg {
+  max-width: 75%;
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: 14px;
+  word-wrap: break-word;
+}
+
+.msg.you {
+  align-self: flex-end;
+  background: #4e73df;
+  color: white;
+  border-bottom-right-radius: 5px;
+}
+
+.msg.stranger {
+  align-self: flex-start;
+  background: #e4e6eb;
+  color: black;
+  border-bottom-left-radius: 5px;
+}
+
+/* Input row */
+.input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.input-row input {
+  flex: 1;
+}
+
+.input-row button {
+  width: auto;
+  padding: 12px 16px;
+}
+
+/* 🔥 Mobile adjustments */
+@media (max-width: 480px) {
+  .card,
+  .chat-box {
+    padding: 20px;
+  }
+
+  .messages {
+    height: 45vh;
+  }
+
+  h1 {
+    font-size: 22px;
+  }
+
+  h2 {
+    font-size: 18px;
+  }
+}
