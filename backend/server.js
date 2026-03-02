@@ -10,18 +10,37 @@ dotenv.config();
 connectDB();
 
 const app = express();
-app.use(cors());
+
+// ✅ Better CORS for production
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST"],
+  }),
+);
+
 app.use(express.json());
 
+// ✅ Health check route (VERY IMPORTANT for Railway)
+app.get("/", (req, res) => {
+  res.status(200).send("ExpresSit Backend Running");
+});
+
 const server = http.createServer(app);
+
+// ✅ Proper socket config
 const io = new Server(server, {
-  cors: { origin: "*" },
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+  transports: ["websocket", "polling"],
 });
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
-  // 🔥 Real-time accurate online users count
+  // 🔥 Real-time online count
   io.emit("onlineCount", io.engine.clientsCount);
 
   socket.on("startChat", async ({ name, age, gender, preference }) => {
@@ -50,12 +69,11 @@ io.on("connection", (socket) => {
           roomId,
         });
 
-        // Join both users to room
         socket.join(roomId);
+
         const oldSocket = io.sockets.sockets.get(existingMatch.socketId);
         if (oldSocket) oldSocket.join(roomId);
 
-        // Send partner details to both
         socket.emit("matched", {
           roomId,
           partnerName: existingMatch.name,
@@ -70,7 +88,7 @@ io.on("connection", (socket) => {
           chatStartTime,
         });
 
-        console.log("Users matched in room:", roomId);
+        console.log("Users matched:", roomId);
       } else {
         await User.create({
           socketId: socket.id,
@@ -82,7 +100,7 @@ io.on("connection", (socket) => {
         });
 
         socket.emit("searching");
-        console.log("User waiting for match:", socket.id);
+        console.log("User searching:", socket.id);
       }
     } catch (err) {
       console.error("Matching error:", err);
@@ -95,12 +113,14 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", async () => {
     await User.deleteOne({ socketId: socket.id });
-
-    // 🔥 Update online count on disconnect
     io.emit("onlineCount", io.engine.clientsCount);
-
     console.log("User disconnected:", socket.id);
   });
 });
 
-server.listen(5000, () => console.log("Server running on port 5000"));
+// ✅ CRITICAL: Railway dynamic port
+const PORT = process.env.PORT || 5000;
+
+server.listen(PORT, () => {
+  console.log("Server running on port", PORT);
+});
