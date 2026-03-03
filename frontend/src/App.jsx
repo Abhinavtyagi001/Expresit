@@ -3,6 +3,7 @@ import io from "socket.io-client";
 
 const socket = io("https://abundant-insight-production-b364.up.railway.app", {
   transports: ["polling"],
+  withCredentials: true,
 });
 
 function App() {
@@ -65,7 +66,14 @@ function App() {
   }, [chat]);
 
   const startChat = () => {
-    console.log("Start Chat clicked");
+    console.log("Values:", { name, age, gender, preference });
+
+    if (!name || !age || !gender || !preference) {
+      alert("Please fill all fields");
+      return;
+    }
+
+    socket.emit("startChat", { name, age, gender, preference });
   };
 
   const sendMessage = () => {
