@@ -7,11 +7,19 @@ import connectDB from "./config/db.js";
 import User from "./models/User.js";
 
 dotenv.config();
-connectDB();
+
+// 🔥 Connect DB safely
+connectDB().catch((err) => {
+  console.error("MongoDB connection failed:", err);
+  process.exit(1);
+});
 
 const app = express();
 
-// ✅ Better CORS for production
+// ✅ IMPORTANT for Railway proxy
+app.set("trust proxy", 1);
+
+// ✅ CORS
 app.use(
   cors({
     origin: "*",
@@ -21,26 +29,27 @@ app.use(
 
 app.use(express.json());
 
-// ✅ Health check route (VERY IMPORTANT for Railway)
+// ✅ Health Check Route (Railway needs this)
 app.get("/", (req, res) => {
-  res.status(200).send("ExpresSit Backend Running");
+  res.status(200).send("ExpresSit Backend Running 🚀");
 });
 
 const server = http.createServer(app);
 
-// ✅ Proper socket config
+// ✅ Production-safe Socket.IO config
 const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
   },
-  transports: ["websocket", "polling"],
+  transports: ["websocket", "polling"], // fallback support
+  allowEIO3: true,
 });
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
-  // 🔥 Real-time online count
+  // 🔥 Online users count
   io.emit("onlineCount", io.engine.clientsCount);
 
   socket.on("startChat", async ({ name, age, gender, preference }) => {
@@ -112,15 +121,20 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", async () => {
-    await User.deleteOne({ socketId: socket.id });
+    try {
+      await User.deleteOne({ socketId: socket.id });
+    } catch (err) {
+      console.error("Cleanup error:", err);
+    }
+
     io.emit("onlineCount", io.engine.clientsCount);
     console.log("User disconnected:", socket.id);
   });
 });
 
-// ✅ CRITICAL: Railway dynamic port
+// 🔥 CRITICAL for Railway
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, () => {
+server.listen(PORT, "0.0.0.0", () => {
   console.log("Server running on port", PORT);
 });
