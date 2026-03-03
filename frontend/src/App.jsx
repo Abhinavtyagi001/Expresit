@@ -65,10 +65,8 @@ function App() {
   }, [chat]);
 
   const startChat = () => {
-    if (!name || !age || !gender || !preference) {
-      alert("All fields are required!");
-      return;
-    }
+  console.log("Start Chat clicked");
+};
 
     socket.emit("startChat", { name, age, gender, preference });
   };
