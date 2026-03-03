@@ -11,35 +11,62 @@ dotenv.config();
 const app = express();
 app.set("trust proxy", 1);
 
-app.use(cors({ origin: "*", methods: ["GET", "POST"] }));
+// 🔥 IMPORTANT: Add your Vercel domain here
+const allowedOrigins = [
+  "https://expresit-pb55.vercel.app", // your frontend
+  "http://localhost:5173", // local dev
+];
+
+// ✅ Proper CORS (NOT "*")
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS not allowed"));
+      }
+    },
+    methods: ["GET", "POST"],
+    credentials: true,
+  }),
+);
+
 app.use(express.json());
 
-// 🚀 Health route responds instantly (important)
+// ✅ Health check
 app.get("/", (req, res) => {
   res.status(200).send("Backend Alive");
 });
 
 const server = http.createServer(app);
 
+// ✅ Socket.io config (MATCH CORS ABOVE)
 const io = new Server(server, {
-  cors: { origin: "*" },
-  transports: ["polling"], // 🔥 use polling for Railway stability
+  cors: {
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+  transports: ["polling"], // Railway safe
 });
 
-// 🔥 Start server IMMEDIATELY
+// ✅ Start server immediately
 const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log("Server running on port", PORT);
 });
 
-// 🔥 Connect DB separately (does NOT block server start)
+// ✅ Connect Mongo separately (non-blocking)
 mongoose
   .connect(process.env.MONGO_URI, {
     serverSelectionTimeoutMS: 5000,
   })
   .then(() => console.log("MongoDB Connected"))
   .catch((err) => console.error("MongoDB error:", err));
+
+// ================= SOCKET LOGIC =================
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
@@ -90,6 +117,8 @@ io.on("connection", (socket) => {
           partnerAge: age,
           chatStartTime,
         });
+
+        console.log("Users matched:", roomId);
       } else {
         await User.create({
           socketId: socket.id,
@@ -101,6 +130,7 @@ io.on("connection", (socket) => {
         });
 
         socket.emit("searching");
+        console.log("User searching:", socket.id);
       }
     } catch (err) {
       console.error("Match error:", err);
@@ -115,6 +145,8 @@ io.on("connection", (socket) => {
     try {
       await User.deleteOne({ socketId: socket.id });
     } catch (err) {}
+
     io.emit("onlineCount", io.engine.clientsCount);
+    console.log("User disconnected:", socket.id);
   });
 });
