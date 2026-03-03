@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import io from "socket.io-client";
 
 const socket = io("https://abundant-insight-production-b364.up.railway.app", {
-  transports: ["websocket"],
+  transports: ["polling"],
 });
 
 function App() {
