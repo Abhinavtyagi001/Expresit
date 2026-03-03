@@ -65,10 +65,7 @@ function App() {
   }, [chat]);
 
   const startChat = () => {
-  console.log("Start Chat clicked");
-};
-
-    socket.emit("startChat", { name, age, gender, preference });
+    console.log("Start Chat clicked");
   };
 
   const sendMessage = () => {
